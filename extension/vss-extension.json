@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
-  "id": "azure-devops-pr-skills",
-  "name": "Azure DevOps PR Skills",
+  "id": "skillflow",
+  "name": "SkillFlow",
   "version": "0.1.0",
   "publisher": "your-publisher-id",
   "targets": [
@@ -50,21 +50,21 @@
   ],
   "links": {
     "home": {
-      "uri": "https://github.com/simonebittidev/azure-devops-pr-skills"
+      "uri": "https://github.com/simonebittidev/skillflow"
     },
     "getstarted": {
-      "uri": "https://github.com/simonebittidev/azure-devops-pr-skills#getting-started"
+      "uri": "https://github.com/simonebittidev/skillflow#getting-started"
     },
     "repository": {
-      "uri": "https://github.com/simonebittidev/azure-devops-pr-skills"
+      "uri": "https://github.com/simonebittidev/skillflow"
     },
     "issues": {
-      "uri": "https://github.com/simonebittidev/azure-devops-pr-skills/issues"
+      "uri": "https://github.com/simonebittidev/skillflow/issues"
     }
   },
   "repository": {
     "type": "git",
-    "uri": "https://github.com/simonebittidev/azure-devops-pr-skills"
+    "uri": "https://github.com/simonebittidev/skillflow"
   },
   "branding": {
     "color": "rgb(220, 235, 252)",

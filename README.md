@@ -1,4 +1,4 @@
-# Azure DevOps PR Skills
+# SkillFlow
 
 An Azure DevOps Pipeline Task that runs **LLM-powered Skills** on Pull Requests. Define agent behavior in plain Markdown files, then let Claude, OpenAI, Azure OpenAI, or Ollama review your code, generate tests, write documentation, and more — automatically, on every PR.
 
@@ -233,7 +233,7 @@ The packaged `.vsix` file can also be installed directly into an Azure DevOps or
 ## Project Structure
 
 ```
-azure-devops-pr-skills/
+skillflow/
 ├── task/                          # Pipeline Task
 │   ├── task.json                  # AzDO task manifest (inputs, version, execution)
 │   ├── main.py                    # Entry point: reads AzDO inputs → runs agent
