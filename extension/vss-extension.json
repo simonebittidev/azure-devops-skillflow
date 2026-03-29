@@ -1,0 +1,74 @@
+{
+  "manifestVersion": 1,
+  "id": "skillflow-pr",
+  "name": "SkillFlow",
+  "version": "0.2.0",
+  "publisher": "SimoneBittiDev",
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "description": "Run LLM-powered Skills on Pull Requests. Define agent behavior in Markdown files and let Claude, OpenAI, Azure OpenAI, or Ollama review your code, generate tests, write documentation, and more.",
+  "categories": [
+    "Azure Pipelines"
+  ],
+  "galleryFlags": ["Private"],
+  "tags": [
+    "AI",
+    "LLM",
+    "Pull Request",
+    "Code Review",
+    "Claude",
+    "OpenAI",
+    "LangGraph"
+  ],
+  "icons": {
+    "default": "images/extension-icon.png"
+  },
+  "files": [
+    {
+      "path": "../task",
+      "addressable": true,
+      "packagePath": "task"
+    },
+    {
+      "path": "images",
+      "addressable": true
+    }
+  ],
+  "contributions": [
+    {
+      "id": "RunLLMSkill",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "task"
+      }
+    }
+  ],
+  "links": {
+    "home": {
+      "uri": "https://github.com/simonebittidev/skillflow"
+    },
+    "getstarted": {
+      "uri": "https://github.com/simonebittidev/skillflow#getting-started"
+    },
+    "repository": {
+      "uri": "https://github.com/simonebittidev/skillflow"
+    },
+    "issues": {
+      "uri": "https://github.com/simonebittidev/skillflow/issues"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/simonebittidev/skillflow"
+  },
+  "branding": {
+    "color": "rgb(220, 235, 252)",
+    "theme": "light"
+  }
+}
