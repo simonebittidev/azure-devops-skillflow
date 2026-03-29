@@ -22,18 +22,11 @@
     "OpenAI",
     "LangGraph"
   ],
-  "icons": {
-    "default": "images/extension-icon.png"
-  },
   "files": [
     {
       "path": "../task",
       "addressable": true,
       "packagePath": "task"
-    },
-    {
-      "path": "images",
-      "addressable": true
     }
   ],
   "contributions": [

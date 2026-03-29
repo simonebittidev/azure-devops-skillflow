@@ -1,5 +1,5 @@
 {
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "id": "1c41c2aa-e4b0-4532-84ae-ebfee13ac1cf",
   "name": "RunLLMSkill",
   "friendlyName": "SkillFlow — Run LLM Skills on PR",
   "description": "Automatically discovers and runs all LLM Skills defined in .azdo/skills/ against the current Pull Request. Supports Claude, OpenAI, Azure OpenAI, and Ollama.",
@@ -31,9 +31,8 @@
     }
   ],
   "execution": {
-    "Process": {
-      "target": "main.py",
-      "argumentFormat": ""
+    "Node20_1": {
+      "target": "main.js"
     }
   }
 }
