@@ -1,9 +1,9 @@
 {
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "name": "RunLLMSkill",
-  "friendlyName": "Run LLM Skill on PR",
-  "description": "Executes an LLM-powered Skill defined in a Markdown file against the current Pull Request. Supports Claude, OpenAI, Azure OpenAI, and Ollama.",
-  "helpMarkDown": "Define your skill in a `.md` file with YAML frontmatter (see examples/code-review.md). Reference it via the `skillFile` input.",
+  "friendlyName": "SkillFlow — Run LLM Skills on PR",
+  "description": "Automatically discovers and runs all LLM Skills defined in .azdo/skills/ against the current Pull Request. Supports Claude, OpenAI, Azure OpenAI, and Ollama.",
+  "helpMarkDown": "Place your Skill `.md` files in `.azdo/skills/` in your repository. All skills found there will be executed automatically. See the [SkillFlow documentation](https://github.com/simonebittidev/skillflow) for details.",
   "category": "Utility",
   "author": "SkillFlow",
   "version": {
@@ -11,55 +11,15 @@
     "Minor": 1,
     "Patch": 0
   },
-  "instanceNameFormat": "Run LLM Skill: $(skillFile)",
+  "instanceNameFormat": "SkillFlow",
   "inputs": [
     {
-      "name": "skillFile",
-      "type": "filePath",
-      "label": "Skill File",
-      "defaultValue": ".azdo/skills/code-review.md",
-      "required": true,
-      "helpMarkDown": "Path to the Skill `.md` file relative to the repository root. The file must have YAML frontmatter and a markdown body."
-    },
-    {
-      "name": "azureDevOpsUrl",
+      "name": "skillsDir",
       "type": "string",
-      "label": "Azure DevOps Organization URL",
-      "defaultValue": "$(System.CollectionUri)",
-      "required": true,
-      "helpMarkDown": "The URL of your Azure DevOps organization (e.g., https://dev.azure.com/myorg)."
-    },
-    {
-      "name": "projectName",
-      "type": "string",
-      "label": "Project Name",
-      "defaultValue": "$(System.TeamProject)",
-      "required": true,
-      "helpMarkDown": "The name of the Azure DevOps project."
-    },
-    {
-      "name": "repositoryId",
-      "type": "string",
-      "label": "Repository ID",
-      "defaultValue": "$(Build.Repository.ID)",
-      "required": true,
-      "helpMarkDown": "The ID of the Git repository."
-    },
-    {
-      "name": "pullRequestId",
-      "type": "string",
-      "label": "Pull Request ID",
-      "defaultValue": "$(System.PullRequest.PullRequestId)",
-      "required": true,
-      "helpMarkDown": "The ID of the Pull Request to analyze."
-    },
-    {
-      "name": "accessToken",
-      "type": "string",
-      "label": "Access Token",
-      "defaultValue": "$(System.AccessToken)",
-      "required": true,
-      "helpMarkDown": "Azure DevOps Personal Access Token (PAT) or System.AccessToken. Needs read/write access to the repository and pull requests."
+      "label": "Skills Directory",
+      "defaultValue": ".azdo/skills",
+      "required": false,
+      "helpMarkDown": "Path to the directory containing Skill `.md` files, relative to the repository root. Defaults to `.azdo/skills`. All `.md` files in this directory will be executed."
     },
     {
       "name": "verbose",
@@ -67,21 +27,13 @@
       "label": "Verbose Logging",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Enable verbose logging to see agent reasoning steps."
+      "helpMarkDown": "Enable verbose logging to see the agent's reasoning steps for each Skill."
     }
   ],
   "execution": {
-    "Node20_1": {
-      "target": "_runner/index.js"
-    },
     "Process": {
       "target": "main.py",
       "argumentFormat": ""
-    }
-  },
-  "postExecution": {
-    "Process": {
-      "target": ""
     }
   }
 }

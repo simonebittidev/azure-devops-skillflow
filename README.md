@@ -133,29 +133,37 @@ You are an expert software engineer performing a thorough code review...
 
 ### 1. Install the Extension
 
-Publish the extension to your Azure DevOps organization (see [Packaging & Publishing](#packaging--publishing)), or run the task directly from a local clone.
+Publish the extension to your Azure DevOps organization (see [Packaging & Publishing](#packaging--publishing)).
 
-### 2. Create a Skill File
+### 2. Create Your Skill Files
 
-Copy one of the [examples](./examples/) into your repository:
+Drop Skill `.md` files in `.azdo/skills/` in your repository. SkillFlow picks them all up automatically — no explicit configuration needed.
 
 ```bash
 mkdir -p .azdo/skills
 cp examples/code-review.md .azdo/skills/code-review.md
 ```
 
-Customize the markdown body to define what the agent should do.
+Multiple skills are all executed in sequence on every PR:
+
+```
+.azdo/
+  skills/
+    code-review.md      ← runs 1st
+    test-generator.md   ← runs 2nd
+    doc-writer.md       ← runs 3rd
+```
 
 ### 3. Set Up Secrets
 
-In your Azure DevOps project, create a **Variable Group** (Pipelines → Library) with your LLM API key:
+In your Azure DevOps project, create a **Variable Group** (Pipelines → Library → + Variable Group) with your LLM API keys:
 
 | Variable | Value |
 |---|---|
 | `ANTHROPIC_API_KEY` | your Anthropic API key |
 | `OPENAI_API_KEY` | your OpenAI API key (if using OpenAI) |
 
-Link the Variable Group to your pipeline.
+Mark them as secret (🔒). Link the Variable Group to your pipeline.
 
 ### 4. Add the Task to Your Pipeline
 
@@ -170,20 +178,24 @@ variables:
 
 steps:
   - task: RunLLMSkill@0
-    displayName: 'AI Code Review'
-    inputs:
-      skillFile: '.azdo/skills/code-review.md'
-      azureDevOpsUrl: '$(System.CollectionUri)'
-      projectName: '$(System.TeamProject)'
-      repositoryId: '$(Build.Repository.ID)'
-      pullRequestId: '$(System.PullRequest.PullRequestId)'
-      accessToken: '$(System.AccessToken)'
-      verbose: false
     env:
       ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
 ```
 
-> **Note:** `System.AccessToken` needs **Contribute to pull requests** permission. In your pipeline settings, set "Allow scripts to access the OAuth token" to enabled, or create a PAT with `Code (Read & Write)` and `Pull Request Threads (Read & Write)` scopes.
+That's it. SkillFlow reads all pipeline context (organization, project, repo, PR ID, token) directly from the Azure DevOps environment — no manual configuration required.
+
+#### Optional inputs
+
+```yaml
+  - task: RunLLMSkill@0
+    inputs:
+      skillsDir: '.azdo/skills'   # default — change if you use a different path
+      verbose: false              # set to true to log agent reasoning steps
+    env:
+      ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+```
+
+> **Note:** Enable **"Allow scripts to access the OAuth token"** in your pipeline settings (Pipeline → Edit → Triggers → ... → Allow scripts to access the OAuth token), and grant the Build Service **"Contribute to pull requests"** permission on the repository (Project Settings → Repositories → Security).
 
 ### 5. Open a Pull Request
 
