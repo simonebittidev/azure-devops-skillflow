@@ -205,3 +205,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+extension/SimoneBittiDev.skillflow-0.1.0.vsix
+extension/package-lock.json
+*.vsix

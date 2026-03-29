@@ -1,9 +1,9 @@
 {
   "manifestVersion": 1,
-  "id": "skillflow",
+  "id": "skillflow-pr",
   "name": "SkillFlow",
-  "version": "0.1.0",
-  "publisher": "your-publisher-id",
+  "version": "0.2.0",
+  "publisher": "SimoneBittiDev",
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
@@ -13,6 +13,7 @@
   "categories": [
     "Azure Pipelines"
   ],
+  "galleryFlags": ["Private"],
   "tags": [
     "AI",
     "LLM",
@@ -22,11 +23,18 @@
     "OpenAI",
     "LangGraph"
   ],
+  "icons": {
+    "default": "images/extension-icon.png"
+  },
   "files": [
     {
       "path": "../task",
       "addressable": true,
       "packagePath": "task"
+    },
+    {
+      "path": "images",
+      "addressable": true
     }
   ],
   "contributions": [
