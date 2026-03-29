@@ -105,7 +105,18 @@ def run_skill(skill: Skill, ctx: PRContext, verbose: bool = False) -> str:
         ),
     ]
 
-    config = {"recursion_limit": skill.max_iterations * 2 + 1}
+    config = {
+        "recursion_limit": skill.max_iterations * 2 + 1,
+        "run_name": skill.name,
+        "tags": [skill.name, skill.provider],
+        "metadata": {
+            "skill": skill.name,
+            "provider": skill.provider,
+            "pr_id": str(ctx.pull_request_id),
+            "repository_id": ctx.repository_id,
+            "project": ctx.project,
+        },
+    }
 
     final_state = agent.invoke({"messages": initial_messages}, config=config)
 
