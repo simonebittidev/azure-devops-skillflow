@@ -16,6 +16,10 @@ from langchain_core.tools import tool
 
 from ..models.skill import PRContext
 
+# Marker appended to PRs created by SkillFlow to prevent pipeline loops.
+# main.py checks for this marker at startup and skips execution if found.
+SKILLFLOW_PR_MARKER = "<!-- generated-by-skillflow -->"
+
 
 # ---------------------------------------------------------------------------
 # Internal AzDO REST client
@@ -107,6 +111,11 @@ class AzDOClient:
             if "item" in c and "path" in c["item"]
         ]
 
+    def get_pr_description(self) -> str:
+        """Return the description of the current PR."""
+        pr_data = self.get(f"pullRequests/{self._pr_id}")
+        return pr_data.get("description", "") or ""
+
     def post_pr_comment(self, comment: str) -> dict:
         """Post a general (non-inline) comment thread on the PR."""
         body = {
@@ -163,7 +172,7 @@ class AzDOClient:
             "refUpdates": [{"name": source_ref, "oldObjectId": old_object_id}],
             "commits": [
                 {
-                    "comment": "LLM Skill suggestion",
+                    "comment": "LLM Skill suggestion ***NO_CI***",
                     "changes": push_changes,
                 }
             ],
@@ -209,7 +218,7 @@ class AzDOClient:
 
         pr_body = {
             "title": title,
-            "description": description,
+            "description": f"{description}\n\n{SKILLFLOW_PR_MARKER}",
             "sourceRefName": new_branch,
             "targetRefName": target_ref,
         }
