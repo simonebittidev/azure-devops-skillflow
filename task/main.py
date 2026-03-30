@@ -14,8 +14,8 @@ Azure DevOps injects pipeline context automatically as environment variables:
 Task inputs (optional, from task.json):
     INPUT_SKILLSDIR             — directory to scan for .md skill files (default: .azdo/skills)
     INPUT_VERBOSE               — enable verbose logging (default: false)
-    INPUT_LANGSMITH_PROJECT     — LangSmith project name; leave empty to disable tracing
-    INPUT_LANGSMITH_API_KEY_VAR — name of the env var holding the LangSmith API key (default: LANGCHAIN_API_KEY)
+    INPUT_LANGSMITH_PROJECT     — LangSmith project name; leave empty to disable tracing (from input: langsmith_project)
+    INPUT_LANGSMITH_API_KEY_VAR — name of the env var holding the LangSmith API key (from input: langsmith_api_key_var, default: LANGCHAIN_API_KEY)
 """
 
 from __future__ import annotations
