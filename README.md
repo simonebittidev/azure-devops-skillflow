@@ -217,6 +217,34 @@ Reads modified source files, generates unit tests, and opens a new PR with the t
 
 Adds or improves docstrings for all public functions and classes changed in the PR, then commits the updated files directly to the branch. Uses `create_commit`.
 
+### `changelog-updater.md` — Claude
+
+Reads the PR diff and automatically appends a new entry to `CHANGELOG.md` under the `[Unreleased]` section, following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format. Classifies changes into `Added`, `Changed`, `Fixed`, `Removed`, `Security`, or `Deprecated`. Commits the updated file directly to the PR branch. Uses `create_commit`.
+
+### `security-scanner.md` — Claude
+
+Scans every changed file for OWASP Top 10 vulnerabilities, hardcoded secrets, insecure cryptography, and other common security anti-patterns. Posts inline comments with severity labels (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) and a final risk summary. Uses `post_inline_comment` and `post_pr_comment`.
+
+### `breaking-change-detector.md` — Claude
+
+Detects backward-incompatible changes in REST API endpoints, public function signatures, database schemas, event payloads, and OpenAPI specs. Posts inline warnings with affected consumers and a migration guide. Uses `post_inline_comment` and `post_pr_comment`.
+
+### `pr-description-enricher.md` — Claude
+
+Posts a structured summary comment on every PR with: a TL;DR, change type classification, impact surface, key changes, a testing checklist, and deployment/rollback notes. Helps reviewers understand what changed without reading every line. Uses `post_pr_comment`.
+
+### `dependency-auditor.md` — Claude
+
+Reviews newly added or upgraded packages across all supported package managers (pip, npm, Maven, NuGet, Cargo, Go modules). Flags known CVEs, typosquatting risks, license incompatibilities (GPL in proprietary code), and unvetted new packages. Uses `post_inline_comment` and `post_pr_comment`.
+
+### `migration-safety-reviewer.md` — Claude
+
+Analyzes database migration files (Alembic, Django, Flyway, Liquibase, Prisma, ActiveRecord, Knex) for operations that could cause production downtime: locking `ALTER TABLE`, missing `CONCURRENTLY` on indexes, unbounded `UPDATE`/`DELETE`, and dropped columns without a deprecation step. Includes a deployment checklist. Uses `post_inline_comment` and `post_pr_comment`.
+
+### `performance-reviewer.md` — Claude
+
+Identifies performance anti-patterns in changed code: N+1 query problems, unbounded database queries without pagination, synchronous blocking I/O in async handlers, O(n²) nested loops, regex compilation in loops, and missing bulk operations. Provides concrete before/after code fixes. Uses `post_inline_comment` and `post_pr_comment`.
+
 ---
 
 ## Packaging & Publishing
@@ -263,5 +291,12 @@ skillflow/
 └── examples/
     ├── code-review.md             # Example: inline code review (Claude)
     ├── test-generator.md          # Example: unit test generation (Claude)
-    └── doc-writer.md              # Example: docstring writer (OpenAI)
+    ├── doc-writer.md              # Example: docstring writer (OpenAI)
+    ├── changelog-updater.md       # Example: auto-update CHANGELOG.md (Claude)
+    ├── security-scanner.md        # Example: OWASP / secrets / CVE scan (Claude)
+    ├── breaking-change-detector.md # Example: API & schema compatibility check (Claude)
+    ├── pr-description-enricher.md # Example: structured PR summary comment (Claude)
+    ├── dependency-auditor.md      # Example: package security & license audit (Claude)
+    ├── migration-safety-reviewer.md # Example: DB migration safety review (Claude)
+    └── performance-reviewer.md    # Example: N+1 / bottleneck detection (Claude)
 ```
