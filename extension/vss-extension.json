@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "skillflow-pr",
   "name": "SkillFlow",
-  "version": "0.2.0",
+  "version": "0.2.4",
   "publisher": "SimoneBittiDev",
   "targets": [
     {
@@ -13,7 +13,10 @@
   "categories": [
     "Azure Pipelines"
   ],
-  "galleryFlags": ["Private"],
+  "galleryFlags": [
+        "Public",
+        "Preview"
+  ],
   "tags": [
     "AI",
     "LLM",
@@ -25,6 +28,11 @@
   ],
   "icons": {
     "default": "images/extension-icon.png"
+  },
+  "content": {
+    "details": {
+      "path": "overview.md"
+    }
   },
   "files": [
     {
