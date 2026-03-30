@@ -283,8 +283,8 @@ skillflow/
 
 | Input | Default | Description |
 |---|---|---|
-| `langsmithProject` | _(empty — disabled)_ | LangSmith project name. Leave empty to disable tracing. |
-| `langsmithApiKeyVar` | `LANGCHAIN_API_KEY` | Name of the environment variable holding the LangSmith API key. |
+| `langsmith_project` | _(empty — disabled)_ | LangSmith project name. Leave empty to disable tracing. |
+| `langsmith_api_key_var` | `LANGCHAIN_API_KEY` | Name of the environment variable holding the LangSmith API key. |
 
 ### How to configure in Azure DevOps
 
@@ -306,14 +306,14 @@ variables:
 
 **Step 3: Configure the task**
 
-Pass the `langsmithProject` input and map the secret variable into the task's environment:
+Pass the `langsmith_project` input and map the secret variable into the task's environment:
 
 ```yaml
 - task: RunLLMSkill@0
   inputs:
     skillsDir: '.azdo/skills'
-    langsmithProject: 'my-project-pr-reviews'
-    langsmithApiKeyVar: 'LANGCHAIN_API_KEY'
+    langsmith_project: 'my-project-pr-reviews'
+    langsmith_api_key_var: 'LANGCHAIN_API_KEY'
   env:
     ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
     LANGCHAIN_API_KEY: $(LANGCHAIN_API_KEY)   # required: secrets must be explicitly mapped
@@ -324,10 +324,10 @@ Pass the `langsmithProject` input and map the secret variable into the task's en
 ### How to view traces
 
 1. Go to [smith.langchain.com](https://smith.langchain.com) and sign in.
-2. Select the project matching your `langsmithProject` input.
+2. Select the project matching your `langsmith_project` input.
 3. Each skill run appears as a top-level trace named after the skill (e.g. `code-review`, `test-generator`).
 4. Use the **Filter** panel to filter by tags (`code-review`, `claude`) or metadata fields (`pr_id`, `repository_id`, `project`).
 
 ### Disabling tracing
 
-Leave `langsmithProject` empty (the default). When tracing is disabled, a debug log message is printed and execution continues normally with no performance impact.
+Leave `langsmith_project` empty (the default). When tracing is disabled, a debug log message is printed and execution continues normally with no performance impact.
