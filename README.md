@@ -195,7 +195,22 @@ That's it. SkillFlow reads all pipeline context (organization, project, repo, PR
       ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
 ```
 
-> **Note:** Enable **"Allow scripts to access the OAuth token"** in your pipeline settings (Pipeline → Edit → Triggers → ... → Allow scripts to access the OAuth token), and grant the Build Service **"Contribute to pull requests"** permission on the repository (Project Settings → Repositories → Security).
+> **Note:** If your skill uses `create_commit` or `create_pr` (i.e. `output: commit` or `output: new_pr`), two additional steps are required:
+>
+> **1. Expose the OAuth token to the task** — add `SYSTEM_ACCESSTOKEN` to the `env` block:
+> ```yaml
+>   - task: RunLLMSkill@0
+>     env:
+>       ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+>       SYSTEM_ACCESSTOKEN: $(System.AccessToken)   # required for create_commit / create_pr
+> ```
+>
+> **2. Grant write permissions to the Build Service** — in Azure DevOps:
+> - Go to **Project Settings → Repositories → [your repo] → Security**
+> - Find **`[Project Name] Build Service`**
+> - Set **Contribute** to **Allow**
+>
+> Without step 1 the API call returns 401. Without step 2 it returns 403. Skills that only post comments (`output: comments`) do not need either of these steps.
 
 ### 5. Open a Pull Request
 
