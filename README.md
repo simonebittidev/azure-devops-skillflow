@@ -300,3 +300,69 @@ skillflow/
     ├── migration-safety-reviewer.md # Example: DB migration safety review (Claude)
     └── performance-reviewer.md    # Example: N+1 / bottleneck detection (Claude)
 ```
+
+---
+
+## LangSmith Tracing
+
+[LangSmith](https://smith.langchain.com) provides observability for LangChain and LangGraph applications. When enabled, every skill execution — each LLM call, tool invocation, and agent step — is recorded as a structured trace you can inspect, debug, and compare in the LangSmith UI.
+
+### What tracing enables
+
+- Full execution traces for every PR skill run, with inputs and outputs at each node
+- Latency and token usage breakdowns per LLM call
+- Filtering and search by skill name, provider, PR ID, and repository
+- Side-by-side comparison of runs across different models or prompt versions
+
+### Task inputs
+
+| Input | Default | Description |
+|---|---|---|
+| `langsmithProject` | _(empty — disabled)_ | LangSmith project name. Leave empty to disable tracing. |
+| `langsmithApiKeyVar` | `LANGCHAIN_API_KEY` | Name of the environment variable holding the LangSmith API key. |
+
+### How to configure in Azure DevOps
+
+**Step 1: Store the API key as a secret variable**
+
+In your Azure DevOps project, go to **Pipelines → Library** and create or open a Variable Group (e.g. `langsmith-credentials`). Add a variable:
+
+- Name: `LANGCHAIN_API_KEY`
+- Value: your LangSmith API key (get it from [smith.langchain.com](https://smith.langchain.com) → Settings → API Keys)
+- Lock the variable (🔒 secret)
+
+**Step 2: Link the Variable Group to your pipeline**
+
+```yaml
+variables:
+  - group: llm-api-keys           # existing group with LLM provider keys
+  - group: langsmith-credentials  # new group with LANGCHAIN_API_KEY
+```
+
+**Step 3: Configure the task**
+
+Pass the `langsmithProject` input and map the secret variable into the task's environment:
+
+```yaml
+- task: RunLLMSkill@0
+  inputs:
+    skillsDir: '.azdo/skills'
+    langsmithProject: 'my-project-pr-reviews'
+    langsmithApiKeyVar: 'LANGCHAIN_API_KEY'
+  env:
+    ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+    LANGCHAIN_API_KEY: $(LANGCHAIN_API_KEY)   # required: secrets must be explicitly mapped
+```
+
+> **Note:** The `env:` block is required because Azure DevOps does not automatically expose secret variables as environment variables — they must be explicitly mapped.
+
+### How to view traces
+
+1. Go to [smith.langchain.com](https://smith.langchain.com) and sign in.
+2. Select the project matching your `langsmithProject` input.
+3. Each skill run appears as a top-level trace named after the skill (e.g. `code-review`, `test-generator`).
+4. Use the **Filter** panel to filter by tags (`code-review`, `claude`) or metadata fields (`pr_id`, `repository_id`, `project`).
+
+### Disabling tracing
+
+Leave `langsmithProject` empty (the default). When tracing is disabled, a debug log message is printed and execution continues normally with no performance impact.

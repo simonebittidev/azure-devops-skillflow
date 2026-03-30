@@ -28,6 +28,22 @@
       "defaultValue": "false",
       "required": false,
       "helpMarkDown": "Enable verbose logging to see the agent's reasoning steps for each Skill."
+    },
+    {
+      "name": "langsmithProject",
+      "type": "string",
+      "label": "LangSmith Project",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "LangSmith project name for tracing. Leave empty to disable tracing."
+    },
+    {
+      "name": "langsmithApiKeyVar",
+      "type": "string",
+      "label": "LangSmith API Key Variable Name",
+      "defaultValue": "LANGCHAIN_API_KEY",
+      "required": false,
+      "helpMarkDown": "Name of the environment variable containing the LangSmith API key."
     }
   ],
   "execution": {

@@ -12,8 +12,10 @@ Azure DevOps injects pipeline context automatically as environment variables:
     SYSTEM_ACCESSTOKEN                — pipeline OAuth token
 
 Task inputs (optional, from task.json):
-    INPUT_SKILLSDIR  — directory to scan for .md skill files (default: .azdo/skills)
-    INPUT_VERBOSE    — enable verbose logging (default: false)
+    INPUT_SKILLSDIR             — directory to scan for .md skill files (default: .azdo/skills)
+    INPUT_VERBOSE               — enable verbose logging (default: false)
+    INPUT_LANGSMITH_PROJECT     — LangSmith project name; leave empty to disable tracing
+    INPUT_LANGSMITH_API_KEY_VAR — name of the env var holding the LangSmith API key (default: LANGCHAIN_API_KEY)
 """
 
 from __future__ import annotations
@@ -25,6 +27,34 @@ from pathlib import Path
 
 def _get_env(var: str, default: str = "") -> str:
     return os.environ.get(var, default).strip()
+
+
+def _setup_langsmith() -> None:
+    """Configure LangSmith tracing from AzDO task inputs.
+
+    Tracing is enabled only when both conditions are true:
+      1. INPUT_LANGSMITH_PROJECT is non-empty (opt-in by the user)
+      2. The named API key variable is present in the environment
+    """
+    project = _get_env("INPUT_LANGSMITH_PROJECT")
+    api_key_var = _get_env("INPUT_LANGSMITH_API_KEY_VAR") or "LANGCHAIN_API_KEY"
+
+    if not project:
+        print("##[debug]LangSmith tracing disabled (INPUT_LANGSMITH_PROJECT not set).")
+        return
+
+    api_key = _get_env(api_key_var)
+    if not api_key:
+        print(
+            f"##vso[task.logissue type=warning]LangSmith tracing disabled: project '{project}' "
+            f"configured but API key variable '{api_key_var}' is not set or empty."
+        )
+        return
+
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_PROJECT"] = project
+    os.environ["LANGCHAIN_API_KEY"] = api_key
+    print(f"##[section]LangSmith tracing enabled — project: '{project}', key from: '{api_key_var}'.")
 
 
 def _require_env(var: str, description: str) -> str:
@@ -47,6 +77,8 @@ def main() -> None:
     # --- Optional task inputs ---
     skills_dir = _get_env("INPUT_SKILLSDIR", ".azdo/skills")
     verbose = _get_env("INPUT_VERBOSE", "false").lower() == "true"
+
+    _setup_langsmith()
 
     # Validate PR ID
     if not pull_request_id_str.isdigit():
