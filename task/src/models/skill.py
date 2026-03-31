@@ -8,6 +8,7 @@ OutputType = Literal["comments", "commit", "new_pr"]
 AVAILABLE_TOOLS = {
     "get_pr_diff",
     "get_file_content",
+    "get_file_diff",
     "list_changed_files",
     "post_inline_comment",
     "post_pr_comment",
