@@ -3,6 +3,7 @@ name: code-review-full
 description: "Reviews PR changes using full file content for maximum context; posts inline comments with actionable feedback"
 version: "1.0"
 provider: claude
+enabled: true
 model: claude-sonnet-4-6
 api_key_var: ANTHROPIC_API_KEY
 output: comments
