@@ -46,7 +46,9 @@ Once the changelog is updated, you open a **new Pull Request** with the changes 
 6. Call `create_pr` with:
    - `title`: `"chore: update CHANGELOG.md for PR #<PR_ID>"` (replace `<PR_ID>` with the actual PR number from context)
    - `description`: a brief summary of what was added to the changelog, formatted as markdown
-   - `changes_json`: a JSON array with a single object representing the updated `CHANGELOG.md` file
+   - `changes_json`: a JSON array with a single object representing the updated `CHANGELOG.md` file.
+     The object must have these exact keys: `path`, `content`, and `change_type`.
+     Example: `[{"path": "CHANGELOG.md", "content": "<full updated file content>", "change_type": "edit"}]`
 7. Call `post_pr_comment` on the **original PR** with a brief summary of what was added to the changelog and a link to the newly created PR.
 
 ## Format Reference

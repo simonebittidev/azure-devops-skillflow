@@ -157,11 +157,20 @@ class AzDOClient:
 
         push_changes = []
         for c in changes:
+            requested = c.get("change_type") or c.get("changeType") or c.get("type") or "edit"
+            path = c["path"] if c["path"].startswith("/") else f"/{c['path']}"
+
+            # Auto-detect: override add/edit based on actual file existence
+            if requested == "delete":
+                change_type = "delete"
+            else:
+                exists = self._file_exists_on_branch(path, branch)
+                change_type = "edit" if exists else "add"
             change_entry: dict[str, Any] = {
-                "changeType": c["change_type"],
-                "item": {"path": c["path"]},
+                "changeType": change_type,
+                "item": {"path": path},
             }
-            if c["change_type"] != "delete":
+            if change_type != "delete":
                 change_entry["newContent"] = {
                     "content": c["content"],
                     "contentType": "rawtext",
@@ -179,6 +188,20 @@ class AzDOClient:
         }
         return self.post("pushes", push_body)
 
+    def _file_exists_on_branch(self, path: str, branch: str) -> bool:
+        """Check whether a file exists on the given branch."""
+        norm = path if path.startswith("/") else f"/{path}"
+        url = self._url(
+            f"items?path={norm}"
+            f"&versionDescriptor.versionType=branch"
+            f"&versionDescriptor.version={branch}"
+        )
+        resp = self._session.get(url)
+        if resp.status_code == 404:
+            return False
+        resp.raise_for_status()
+        return True
+
     def create_pr(self, title: str, description: str, changes: list[dict]) -> dict:
         """Create a new branch with the given changes and open a PR against the base branch."""
         import time
@@ -192,13 +215,26 @@ class AzDOClient:
 
         new_branch = f"refs/heads/skill-suggestion-{int(time.time())}"
 
+        # The new branch is created from the target branch, so we must check
+        # file existence against the target branch to pick the right changeType.
+        target_branch = target_ref.replace("refs/heads/", "")
+
         push_changes = []
         for c in changes:
+            requested = c.get("change_type") or c.get("changeType") or c.get("type") or "edit"
+            path = c["path"] if c["path"].startswith("/") else f"/{c['path']}"
+
+            # Auto-detect: override add/edit based on actual file existence
+            if requested == "delete":
+                change_type = "delete"
+            else:
+                exists = self._file_exists_on_branch(path, target_branch)
+                change_type = "edit" if exists else "add"
             change_entry: dict[str, Any] = {
-                "changeType": c["change_type"],
-                "item": {"path": c["path"]},
+                "changeType": change_type,
+                "item": {"path": path},
             }
-            if c["change_type"] != "delete":
+            if change_type != "delete":
                 change_entry["newContent"] = {
                     "content": c["content"],
                     "contentType": "rawtext",
@@ -206,10 +242,11 @@ class AzDOClient:
             push_changes.append(change_entry)
 
         push_body = {
-            "refUpdates": [{"name": new_branch, "oldObjectId": old_object_id}],
+            "refUpdates": [{"name": new_branch, "oldObjectId": "0000000000000000000000000000000000000000"}],
             "commits": [
                 {
                     "comment": f"LLM Skill suggestion: {title}",
+                    "parents": [old_object_id],
                     "changes": push_changes,
                 }
             ],
@@ -332,7 +369,13 @@ def build_tools(ctx: PRContext, enabled_tools: list[str]):
             Args:
                 title: The title of the new Pull Request.
                 description: The markdown description for the new Pull Request.
-                changes_json: A JSON array of change objects (same format as create_commit).
+                changes_json: A JSON array of change objects. Each object must have:
+                    - path (str): file path in the repo
+                    - content (str): new file content
+                    - change_type (str): "add", "edit", or "delete"
+
+                Example:
+                    [{"path": "CHANGELOG.md", "content": "# Changelog\\n...", "change_type": "edit"}]
             """
             try:
                 changes = json.loads(changes_json)
