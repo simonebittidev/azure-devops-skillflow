@@ -67,6 +67,9 @@ provider: claude                   # claude | openai | azure_openai | ollama
 model: claude-sonnet-4-6
 api_key_var: ANTHROPIC_API_KEY     # name of the AzDO Variable Group variable
 
+# Enable or disable the skill (default: true)
+enabled: true
+
 # What the agent outputs
 output: comments                   # comments | commit | new_pr
 
@@ -96,6 +99,7 @@ You are an expert software engineer performing a thorough code review...
 | Field | Required | Description |
 |---|---|---|
 | `name` | yes | Identifier for the skill |
+| `enabled` | no | `true` (default) or `false` — set to `false` to skip the skill without deleting it |
 | `provider` | yes | `claude`, `openai`, `azure_openai`, or `ollama` |
 | `model` | yes | Model name (e.g. `claude-sonnet-4-6`, `gpt-4o`) |
 | `api_key_var` | yes | Name of the env var holding the API key |

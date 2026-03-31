@@ -148,6 +148,10 @@ def main() -> None:
             errors.append(msg)
             continue
 
+        if not skill.enabled:
+            print(f"  Skill '{skill.name}' is disabled — skipping.")
+            continue
+
         print(f"  Provider: {skill.provider} / {skill.model}")
         print(f"  Output:   {skill.output}")
         print(f"  Tools:    {', '.join(skill.tools)}")

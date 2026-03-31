@@ -5,6 +5,7 @@ version: "1.0"
 provider: claude
 model: claude-sonnet-4-6
 api_key_var: ANTHROPIC_API_KEY
+enabled: true
 output: new_pr
 max_iterations: 20
 tools:

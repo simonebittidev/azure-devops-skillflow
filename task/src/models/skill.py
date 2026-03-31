@@ -36,6 +36,7 @@ class SkillFrontmatter(BaseModel):
             "post_pr_comment",
         ]
     )
+    enabled: bool = True
     # Azure OpenAI specific
     azure_endpoint: str | None = None
     azure_api_version: str | None = None
@@ -77,6 +78,10 @@ class Skill(BaseModel):
     @property
     def max_iterations(self) -> int:
         return self.frontmatter.max_iterations
+
+    @property
+    def enabled(self) -> bool:
+        return self.frontmatter.enabled
 
 
 class PRContext(BaseModel):

@@ -4,6 +4,7 @@ description: "Scansiona le modifiche della PR alla ricerca di vulnerabilità OWA
 provider: claude
 model: claude-sonnet-4-6
 api_key_var: ANTHROPIC_API_KEY
+enabled: true
 output: comments
 max_iterations: 25
 tools:

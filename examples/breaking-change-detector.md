@@ -4,6 +4,7 @@ description: "Rileva breaking changes nelle API pubbliche, contratti di interfac
 provider: claude
 model: claude-sonnet-4-6
 api_key_var: ANTHROPIC_API_KEY
+enabled: true
 output: comments
 max_iterations: 20
 tools:

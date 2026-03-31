@@ -5,6 +5,7 @@ version: "1.0"
 provider: openai
 model: gpt-4o
 api_key_var: OPENAI_API_KEY
+enabled: true
 output: commit
 max_iterations: 20
 tools:
