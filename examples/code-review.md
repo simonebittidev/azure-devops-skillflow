@@ -13,6 +13,7 @@ tools:
   - list_changed_files
   - get_file_diff
   - post_inline_comment
+  - post_suggestion_comment
   - post_pr_comment
 ---
 
@@ -27,7 +28,11 @@ This skill reviews **only the changed lines** of each file (diff mode). Comments
 1. Call `get_pr_diff` to get a unified diff of all changes across the PR.
 2. Call `list_changed_files` to get the complete list of modified files.
 3. For each relevant file, call `get_file_diff` to read the exact lines added or removed.
-4. Post specific inline comments using `post_inline_comment` for file/line-level feedback. Only comment on lines that appear in the diff.
+4. Post feedback using the appropriate tool:
+   - Use `post_suggestion_comment` when you can propose an exact replacement for a line (e.g. a typo fix, a renamed variable, a safer API call). This renders an interactive diff with an "Apply change" button in Azure DevOps.
+   - Use `post_inline_comment` for general observations, questions, or feedback that does not map to a single-line replacement.
+   - Only comment on lines that appear in the diff.
+   - Try always to propose suggestion, if no suggestion could be proposed the post an inline comment.
 5. After reviewing all files, post a summary with `post_pr_comment`.
 
 ## What to Look For

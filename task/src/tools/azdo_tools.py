@@ -170,6 +170,26 @@ class AzDOClient:
         }
         return self.post(f"pullRequests/{self._pr_id}/threads", body)
 
+    def post_suggestion_comment(
+        self, file_path: str, line: int, suggested_code: str, comment: str = "", right_file_start_line: int | None = None
+    ) -> dict:
+        """Post an inline suggestion on a specific line of a file in the PR.
+
+        The suggestion renders with an 'Apply change' button in Azure DevOps UI.
+        """
+        line_number = right_file_start_line or line
+        content = f"{comment}\n\n```suggestion\n{suggested_code}\n```" if comment else f"```suggestion\n{suggested_code}\n```"
+        body = {
+            "comments": [{"parentCommentId": 0, "content": content, "commentType": 1}],
+            "status": 1,
+            "threadContext": {
+                "filePath": file_path,
+                "rightFileStart": {"line": line_number, "offset": 1},
+                "rightFileEnd": {"line": line_number, "offset": 1},
+            },
+        }
+        return self.post(f"pullRequests/{self._pr_id}/threads", body)
+
     def create_commit(self, changes: list[dict]) -> dict:
         """Push a new commit with file changes to the PR's source branch.
 
@@ -379,6 +399,27 @@ def build_tools(ctx: PRContext, enabled_tools: list[str]):
             return f"Inline comment posted on {file_path}:{line}."
 
         all_tools.append(post_inline_comment)
+
+    if "post_suggestion_comment" in enabled_tools:
+        @tool
+        def post_suggestion_comment(file_path: str, line: int, suggested_code: str, comment: str = "") -> str:
+            """Post an inline suggestion on a specific line of a file in the Pull Request.
+
+            The suggestion renders in Azure DevOps with an 'Apply change' button that lets
+            the PR author apply the change directly without leaving the browser.
+            Use this instead of post_inline_comment when you want to propose a specific
+            code fix that can be applied with one click.
+
+            Args:
+                file_path: The path of the file (e.g. src/main.py).
+                line: The 1-based line number to suggest a change on.
+                suggested_code: The replacement code for that line (without leading/trailing newlines).
+                comment: Optional explanation shown above the suggestion diff.
+            """
+            client.post_suggestion_comment(file_path, line, suggested_code, comment)
+            return f"Suggestion posted on {file_path}:{line}."
+
+        all_tools.append(post_suggestion_comment)
 
     if "create_commit" in enabled_tools:
         @tool

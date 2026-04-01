@@ -11,6 +11,7 @@ AVAILABLE_TOOLS = {
     "get_file_diff",
     "list_changed_files",
     "post_inline_comment",
+    "post_suggestion_comment",
     "post_pr_comment",
     "create_commit",
     "create_pr",
