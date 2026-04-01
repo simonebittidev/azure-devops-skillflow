@@ -55,26 +55,56 @@ class AzDOClient:
         return resp.json()
 
     def get_pr_diff(self) -> str:
-        """Return a unified-style diff of all changes in the PR."""
-        data = self.get(f"pullRequests/{self._pr_id}/iterations")
-        iterations = data.get("value", [])
-        if not iterations:
-            return ""
-        latest = iterations[-1]["id"]
+        """Return a unified diff of all changes in the PR."""
+        import difflib
 
-        changes_data = self.get(
-            f"pullRequests/{self._pr_id}/iterations/{latest}/changes"
+        pr_data = self.get(f"pullRequests/{self._pr_id}")
+        source_branch = pr_data.get("sourceRefName", "").replace("refs/heads/", "")
+        target_branch = pr_data.get("targetRefName", "").replace("refs/heads/", "")
+
+        all_diffs: list[str] = []
+        for file_path in self.list_changed_files():
+            before = self._get_file_at_branch(file_path, target_branch)
+            after = self._get_file_at_branch(file_path, source_branch)
+            diff = list(difflib.unified_diff(
+                before.splitlines(keepends=True),
+                after.splitlines(keepends=True),
+                fromfile=f"a{file_path}",
+                tofile=f"b{file_path}",
+            ))
+            all_diffs.extend(diff)
+
+        return "".join(all_diffs) if all_diffs else "No changes found."
+
+    def _get_file_at_branch(self, file_path: str, branch: str) -> str:
+        """Return the raw text of a file at a specific branch, or '' if not found."""
+        url = self._url(
+            f"items?path={file_path}&versionDescriptor.versionType=branch"
+            f"&versionDescriptor.version={branch}"
         )
-        changes = changes_data.get("changeEntries", [])
+        resp = self._session.get(url)
+        if resp.status_code == 404:
+            return ""
+        resp.raise_for_status()
+        return resp.text
 
-        diff_lines: list[str] = []
-        for change in changes:
-            item = change.get("item", {})
-            path = item.get("path", "")
-            change_type = change.get("changeType", "")
-            diff_lines.append(f"--- {path} ({change_type})")
+    def get_file_diff(self, file_path: str) -> str:
+        """Return the unified diff for a single file in the PR."""
+        import difflib
 
-        return "\n".join(diff_lines) if diff_lines else "No changes found."
+        pr_data = self.get(f"pullRequests/{self._pr_id}")
+        source_branch = pr_data.get("sourceRefName", "").replace("refs/heads/", "")
+        target_branch = pr_data.get("targetRefName", "").replace("refs/heads/", "")
+
+        before = self._get_file_at_branch(file_path, target_branch)
+        after = self._get_file_at_branch(file_path, source_branch)
+        diff = list(difflib.unified_diff(
+            before.splitlines(keepends=True),
+            after.splitlines(keepends=True),
+            fromfile=f"a{file_path}",
+            tofile=f"b{file_path}",
+        ))
+        return "".join(diff) if diff else "No changes in this file."
 
     def get_file_content(self, file_path: str) -> str:
         """Return the content of a file at the PR's source branch."""
@@ -284,7 +314,7 @@ def build_tools(ctx: PRContext, enabled_tools: list[str]):
     if "get_pr_diff" in enabled_tools:
         @tool
         def get_pr_diff() -> str:
-            """Fetch the diff (list of changed files and change types) for the current Pull Request."""
+            """Fetch the full unified diff of all changes in the current Pull Request."""
             return client.get_pr_diff()
 
         all_tools.append(get_pr_diff)
@@ -309,6 +339,18 @@ def build_tools(ctx: PRContext, enabled_tools: list[str]):
             return client.get_file_content(file_path)
 
         all_tools.append(get_file_content)
+
+    if "get_file_diff" in enabled_tools:
+        @tool
+        def get_file_diff(file_path: str) -> str:
+            """Return the unified diff (only the changed lines) for a single file in the PR.
+
+            Args:
+                file_path: The path of the file relative to the repository root (e.g. src/main.py).
+            """
+            return client.get_file_diff(file_path)
+
+        all_tools.append(get_file_diff)
 
     if "post_pr_comment" in enabled_tools:
         @tool
