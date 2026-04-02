@@ -43,6 +43,8 @@ class SkillFrontmatter(BaseModel):
     azure_endpoint: str | None = None
     azure_api_version: str | None = None
     azure_deployment: str | None = None
+    # OpenAI Responses API (required for Codex models like gpt-5.1-codex)
+    use_responses_api: bool = False
     # Ollama specific
     ollama_base_url: str = "http://localhost:11434"
 

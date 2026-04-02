@@ -102,6 +102,7 @@ You are an expert software engineer performing a thorough code review...
 | `output` | no | `comments` (default), `commit`, or `new_pr` |
 | `max_iterations` | no | Max agent steps, default `10`, max `50` |
 | `tools` | no | List of tools to enable (see below) |
+| `use_responses_api` | no | Set to `true` for OpenAI models that require the Responses API (e.g. `gpt-5.1-codex`). Default: `false` |
 | `azure_endpoint` | azure_openai only | Azure OpenAI endpoint URL |
 | `azure_api_version` | azure_openai only | API version string |
 | `azure_deployment` | azure_openai only | Deployment name |
