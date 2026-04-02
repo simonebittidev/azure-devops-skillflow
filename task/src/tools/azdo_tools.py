@@ -76,8 +76,14 @@ class AzDOClient:
 
         return "".join(all_diffs) if all_diffs else "No changes found."
 
+    @staticmethod
+    def _normalize_path(path: str) -> str:
+        """Ensure a file path starts with '/' as required by the Azure DevOps API."""
+        return path if path.startswith("/") else f"/{path}"
+
     def _get_file_at_branch(self, file_path: str, branch: str) -> str:
         """Return the raw text of a file at a specific branch, or '' if not found."""
+        file_path = self._normalize_path(file_path)
         url = self._url(
             f"items?path={file_path}&versionDescriptor.versionType=branch"
             f"&versionDescriptor.version={branch}"
@@ -108,6 +114,7 @@ class AzDOClient:
 
     def get_file_content(self, file_path: str) -> str:
         """Return the content of a file at the PR's source branch."""
+        file_path = self._normalize_path(file_path)
         pr_data = self.get(f"pullRequests/{self._pr_id}")
         source_ref = pr_data.get("sourceRefName", "")
 
@@ -158,6 +165,7 @@ class AzDOClient:
         self, file_path: str, line: int, comment: str, right_file_start_line: int | None = None
     ) -> dict:
         """Post an inline comment on a specific line of a file in the PR."""
+        file_path = self._normalize_path(file_path)
         line_number = right_file_start_line or line
         body = {
             "comments": [{"parentCommentId": 0, "content": comment, "commentType": 1}],
@@ -177,6 +185,7 @@ class AzDOClient:
 
         The suggestion renders with an 'Apply change' button in Azure DevOps UI.
         """
+        file_path = self._normalize_path(file_path)
         line_number = right_file_start_line or line
         content = f"{comment}\n\n```suggestion\n{suggested_code}\n```" if comment else f"```suggestion\n{suggested_code}\n```"
         body = {
@@ -208,7 +217,7 @@ class AzDOClient:
         push_changes = []
         for c in changes:
             requested = c.get("change_type") or c.get("changeType") or c.get("type") or "edit"
-            path = c["path"] if c["path"].startswith("/") else f"/{c['path']}"
+            path = self._normalize_path(c["path"])
 
             # Auto-detect: override add/edit based on actual file existence
             if requested == "delete":
@@ -240,7 +249,7 @@ class AzDOClient:
 
     def _file_exists_on_branch(self, path: str, branch: str) -> bool:
         """Check whether a file exists on the given branch."""
-        norm = path if path.startswith("/") else f"/{path}"
+        norm = self._normalize_path(path)
         url = self._url(
             f"items?path={norm}"
             f"&versionDescriptor.versionType=branch"
@@ -272,7 +281,7 @@ class AzDOClient:
         push_changes = []
         for c in changes:
             requested = c.get("change_type") or c.get("changeType") or c.get("type") or "edit"
-            path = c["path"] if c["path"].startswith("/") else f"/{c['path']}"
+            path = self._normalize_path(c["path"])
 
             # Auto-detect: override add/edit based on actual file existence
             if requested == "delete":
