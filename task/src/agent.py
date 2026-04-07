@@ -44,7 +44,7 @@ def build_agent(skill: Skill, ctx: PRContext) -> "CompiledGraph":
     api_key = resolve_api_key(skill)
     llm: BaseChatModel = create_chat_model(skill, api_key)
 
-    tools = build_tools(ctx, skill.tools)
+    tools = build_tools(ctx, skill.tools, skill.create_pr_target)
     llm_with_tools = llm.bind_tools(tools)
 
     def call_model(state: AgentState) -> AgentState:

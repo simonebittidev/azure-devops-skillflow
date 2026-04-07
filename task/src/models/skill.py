@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 ProviderType = Literal["claude", "openai", "azure_openai", "ollama"]
 OutputType = Literal["comments", "commit", "new_pr"]
+CreatePrTargetType = Literal["target_branch", "source_branch"]
 
 AVAILABLE_TOOLS = {
     "get_pr_diff",
@@ -45,6 +46,8 @@ class SkillFrontmatter(BaseModel):
     azure_deployment: str | None = None
     # Ollama specific
     ollama_base_url: str = "http://localhost:11434"
+    # create_pr behavior
+    create_pr_target: CreatePrTargetType = "target_branch"
 
     def validate_tools(self) -> list[str]:
         unknown = set(self.tools) - AVAILABLE_TOOLS
@@ -84,6 +87,10 @@ class Skill(BaseModel):
     @property
     def enabled(self) -> bool:
         return self.frontmatter.enabled
+
+    @property
+    def create_pr_target(self) -> CreatePrTargetType:
+        return self.frontmatter.create_pr_target
 
 
 class PRContext(BaseModel):

@@ -261,7 +261,7 @@ class AzDOClient:
         resp.raise_for_status()
         return True
 
-    def create_pr(self, title: str, description: str, changes: list[dict]) -> dict:
+    def create_pr(self, title: str, description: str, changes: list[dict], create_pr_target: str = "target_branch") -> dict:
         """Create a new branch with the given changes and open a PR against the base branch."""
         import time
 
@@ -269,14 +269,16 @@ class AzDOClient:
         target_ref = pr_data.get("targetRefName", "refs/heads/main")
         source_ref = pr_data.get("sourceRefName", "refs/heads/main")
 
-        refs_data = self.get(f"refs?filter={target_ref.replace('refs/', '')}")
+        base_ref = source_ref if create_pr_target == "source_branch" else target_ref
+
+        refs_data = self.get(f"refs?filter={base_ref.replace('refs/', '')}")
         old_object_id = refs_data["value"][0]["objectId"]
 
         new_branch = f"refs/heads/skill-suggestion-{int(time.time())}"
 
-        # The new branch is created from the target branch, so we must check
-        # file existence against the target branch to pick the right changeType.
-        target_branch = target_ref.replace("refs/heads/", "")
+        # The new branch is created from base_ref, so we must check
+        # file existence against that branch to pick the right changeType.
+        base_branch = base_ref.replace("refs/heads/", "")
 
         push_changes = []
         for c in changes:
@@ -287,7 +289,7 @@ class AzDOClient:
             if requested == "delete":
                 change_type = "delete"
             else:
-                exists = self._file_exists_on_branch(path, target_branch)
+                exists = self._file_exists_on_branch(path, base_branch)
                 change_type = "edit" if exists else "add"
             change_entry: dict[str, Any] = {
                 "changeType": change_type,
@@ -316,7 +318,7 @@ class AzDOClient:
             "title": title,
             "description": f"{description}\n\n{SKILLFLOW_PR_MARKER}",
             "sourceRefName": new_branch,
-            "targetRefName": target_ref,
+            "targetRefName": base_ref,
         }
         url = (
             f"{self._base}/{self._project}/_apis/git/repositories/{self._repo}"
@@ -331,7 +333,7 @@ class AzDOClient:
 # Tool factory — returns a list of @tool functions bound to a PRContext
 # ---------------------------------------------------------------------------
 
-def build_tools(ctx: PRContext, enabled_tools: list[str]):
+def build_tools(ctx: PRContext, enabled_tools: list[str], create_pr_target: str = "target_branch"):
     """Return LangGraph-compatible tool functions bound to the given PRContext.
 
     Only tools listed in `enabled_tools` are included, matching the skill's
@@ -473,7 +475,7 @@ def build_tools(ctx: PRContext, enabled_tools: list[str]):
                 changes = json.loads(changes_json)
             except json.JSONDecodeError as e:
                 return f"Error: changes_json is not valid JSON — {e}"
-            result = client.create_pr(title, description, changes)
+            result = client.create_pr(title, description, changes, create_pr_target=create_pr_target)
             pr_url = result.get("url", "")
             return f"Pull Request created: {pr_url}"
 
