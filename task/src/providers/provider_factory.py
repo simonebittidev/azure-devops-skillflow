@@ -32,10 +32,10 @@ def create_chat_model(skill: Skill, api_key: str) -> BaseChatModel:
     if provider == "openai":
         from langchain_openai import ChatOpenAI
 
-        return ChatOpenAI(
-            model=model_name,
-            api_key=api_key,
-        )
+        kwargs: dict = {"model": model_name, "api_key": api_key}
+        if fm.use_responses_api:
+            kwargs["use_responses_api"] = True
+        return ChatOpenAI(**kwargs)
 
     if provider == "azure_openai":
         from langchain_openai import AzureChatOpenAI
@@ -49,12 +49,15 @@ def create_chat_model(skill: Skill, api_key: str) -> BaseChatModel:
                 "Skill frontmatter must include 'azure_api_version' for provider 'azure_openai'."
             )
 
-        return AzureChatOpenAI(
-            azure_endpoint=fm.azure_endpoint,
-            api_version=fm.azure_api_version,
-            azure_deployment=fm.azure_deployment or model_name,
-            api_key=api_key,
-        )
+        kwargs: dict = {
+            "azure_endpoint": fm.azure_endpoint,
+            "api_version": fm.azure_api_version,
+            "azure_deployment": fm.azure_deployment or model_name,
+            "api_key": api_key,
+        }
+        if fm.use_responses_api:
+            kwargs["use_responses_api"] = True
+        return AzureChatOpenAI(**kwargs)
 
     if provider == "ollama":
         from langchain_ollama import ChatOllama
