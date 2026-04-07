@@ -1,8 +1,8 @@
 {
   "manifestVersion": 1,
   "id": "skillflow-pr",
-  "name": "SkillFlow",
-  "version": "0.2.4",
+  "name": "SkillFlow - Ai Pr Reviewer",
+  "version": "0.2.15",
   "publisher": "SimoneBittiDev",
   "targets": [
     {
@@ -59,21 +59,21 @@
   ],
   "links": {
     "home": {
-      "uri": "https://github.com/simonebittidev/skillflow"
+      "uri": "https://github.com/simonebittidev/azure-devops-skillflow"
     },
     "getstarted": {
-      "uri": "https://github.com/simonebittidev/skillflow#getting-started"
+      "uri": "https://github.com/simonebittidev/azure-devops-skillflow#getting-started"
     },
     "repository": {
-      "uri": "https://github.com/simonebittidev/skillflow"
+      "uri": "https://github.com/simonebittidev/azure-devops-skillflow"
     },
     "issues": {
-      "uri": "https://github.com/simonebittidev/skillflow/issues"
+      "uri": "https://github.com/simonebittidev/azure-devops-skillflow/issues"
     }
   },
   "repository": {
     "type": "git",
-    "uri": "https://github.com/simonebittidev/skillflow"
+    "uri": "https://github.com/simonebittidev/azure-devops-skillflow"
   },
   "branding": {
     "color": "rgb(220, 235, 252)",
