@@ -9,6 +9,7 @@ api_key_var: ANTHROPIC_API_KEY
 output: comments
 max_iterations: 15
 tools:
+  - get_pr_comments
   - get_pr_diff
   - list_changed_files
   - get_file_content
@@ -25,15 +26,16 @@ This skill reviews the **full content** of each changed file for maximum context
 
 ## How to Proceed
 
-1. Call `get_pr_diff` to get an overview of what changed across the PR.
-2. Call `list_changed_files` to get the complete list of modified files.
-3. For each relevant file, call `get_file_content` to read its full content and understand the context around the changes.
-4. Post feedback using the appropriate tool:
+1. Call `get_pr_comments` to retrieve all existing comment threads on the PR. Before posting any inline comment, check this list: if an active thread already exists on the same file within 5 lines of the target line, skip that comment to avoid duplicates.
+2. Call `get_pr_diff` to get an overview of what changed across the PR.
+3. Call `list_changed_files` to get the complete list of modified files.
+4. For each relevant file, call `get_file_content` to read its full content and understand the context around the changes.
+5. Post feedback using the appropriate tool:
    - Use `post_suggestion_comment` when you can propose an exact replacement for a line (e.g. a typo fix, a renamed variable, a safer API call). This renders an interactive diff with an "Apply change" button in Azure DevOps.
    - Use `post_inline_comment` for general observations, questions, or feedback that does not map to a single-line replacement.
    - Only comment on lines that appear in the diff.
    - Try always to propose suggestion, if no suggestion could be proposed the post an inline comment.
-5. After reviewing all files, post a summary with `post_pr_comment`.
+6. After reviewing all files, post a summary with `post_pr_comment`.
 
 ## What to Look For
 

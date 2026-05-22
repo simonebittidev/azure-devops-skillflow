@@ -34,6 +34,7 @@ Azure DevOps Pipeline
        └── agent.py            — LangGraph ReAct graph
 
               LangGraph Agent
+              ├── [tool] get_pr_comments
               ├── [tool] get_pr_diff
               ├── [tool] list_changed_files
               ├── [tool] get_file_content
@@ -116,11 +117,14 @@ You are an expert software engineer performing a thorough code review...
 
 | Tool | Description |
 |---|---|
+| `get_pr_comments` | Returns all existing comment threads on the PR (id, file, line, content, status). Use it before posting to avoid duplicates. |
 | `get_pr_diff` | Fetches the diff summary for the PR (changed files + change types) |
+| `get_file_diff` | Returns the unified diff for a single file in the PR |
 | `list_changed_files` | Returns the list of file paths modified in the PR |
 | `get_file_content` | Returns the full content of a file from the PR's source branch |
 | `post_pr_comment` | Posts a general comment thread on the PR |
 | `post_inline_comment` | Posts an inline comment on a specific file and line |
+| `post_suggestion_comment` | Posts an inline code suggestion (renders an "Apply change" button in the PR UI) |
 | `create_commit` | Creates a commit with file changes on the PR's source branch |
 | `create_pr` | Creates a new branch + PR with the given file changes |
 

@@ -153,6 +153,27 @@ class AzDOClient:
         pr_data = self.get(f"pullRequests/{self._pr_id}")
         return pr_data.get("description", "") or ""
 
+    def get_pr_threads(self) -> list[dict]:
+        """Return a simplified list of all comment threads on the PR."""
+        data = self.get(f"pullRequests/{self._pr_id}/threads")
+        result = []
+        for thread in data.get("value", []):
+            ctx = thread.get("threadContext")
+            comments = thread.get("comments", [])
+            content = comments[0].get("content", "") if comments else ""
+            start = None
+            if ctx:
+                start_obj = ctx.get("rightFileStart") or ctx.get("leftFileStart") or {}
+                start = start_obj.get("line")
+            result.append({
+                "id": thread.get("id"),
+                "filePath": ctx.get("filePath") if ctx else None,
+                "line": start,
+                "content": content,
+                "status": thread.get("status"),
+            })
+        return result
+
     def post_pr_comment(self, comment: str) -> dict:
         """Post a general (non-inline) comment thread on the PR."""
         body = {
@@ -341,6 +362,27 @@ def build_tools(ctx: PRContext, enabled_tools: list[str], create_pr_target: str 
     """
     client = AzDOClient(ctx)
     all_tools = []
+
+    if "get_pr_comments" in enabled_tools:
+        @tool
+        def get_pr_comments() -> str:
+            """Return all existing comment threads on the Pull Request as a JSON array.
+
+            Each thread contains:
+            - id: thread id
+            - filePath: file path (null for general PR comments)
+            - line: start line number (null for general PR comments)
+            - content: text of the first comment in the thread
+            - status: thread status (1=active, 2=fixed, 3=wontFix, 4=closed, 5=byDesign, 6=pending)
+
+            Call this before posting any inline comment to avoid posting duplicates.
+            Do not post a new inline comment on a file and line where an active thread
+            already exists within 5 lines of the target line.
+            """
+            threads = client.get_pr_threads()
+            return json.dumps(threads, ensure_ascii=False)
+
+        all_tools.append(get_pr_comments)
 
     if "get_pr_diff" in enabled_tools:
         @tool
