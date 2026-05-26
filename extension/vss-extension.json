@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "skillflow-pr",
   "name": "SkillFlow - Ai Pr Reviewer",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "publisher": "SimoneBittiDev",
   "targets": [
     {

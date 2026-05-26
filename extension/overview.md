@@ -34,6 +34,7 @@ Azure DevOps Pipeline
        └── agent.py            — LangGraph ReAct graph
 
               LangGraph Agent
+              ├── [tool] get_pr_comments
               ├── [tool] get_pr_diff
               ├── [tool] list_changed_files
               ├── [tool] get_file_content
@@ -67,6 +68,9 @@ provider: claude                   # claude | openai | azure_openai | ollama
 model: claude-sonnet-4-6
 api_key_var: ANTHROPIC_API_KEY     # name of the AzDO Variable Group variable
 
+# Enable or disable the skill (default: true)
+enabled: true
+
 # What the agent outputs
 output: comments                   # comments | commit | new_pr
 
@@ -96,12 +100,14 @@ You are an expert software engineer performing a thorough code review...
 | Field | Required | Description |
 |---|---|---|
 | `name` | yes | Identifier for the skill |
+| `enabled` | no | `true` (default) or `false` — set to `false` to skip the skill without deleting it |
 | `provider` | yes | `claude`, `openai`, `azure_openai`, or `ollama` |
 | `model` | yes | Model name (e.g. `claude-sonnet-4-6`, `gpt-4o`) |
 | `api_key_var` | yes | Name of the env var holding the API key |
 | `output` | no | `comments` (default), `commit`, or `new_pr` |
 | `max_iterations` | no | Max agent steps, default `10`, max `50` |
 | `tools` | no | List of tools to enable (see below) |
+| `create_pr_target` | no | Target branch for the new PR when using `create_pr`: `target_branch` (default) or `source_branch` (see below) |
 | `azure_endpoint` | azure_openai only | Azure OpenAI endpoint URL |
 | `azure_api_version` | azure_openai only | API version string |
 | `azure_deployment` | azure_openai only | Deployment name |
@@ -111,11 +117,14 @@ You are an expert software engineer performing a thorough code review...
 
 | Tool | Description |
 |---|---|
+| `get_pr_comments` | Returns all existing comment threads on the PR (id, file, line, content, status). Use it before posting to avoid duplicates. |
 | `get_pr_diff` | Fetches the diff summary for the PR (changed files + change types) |
+| `get_file_diff` | Returns the unified diff for a single file in the PR |
 | `list_changed_files` | Returns the list of file paths modified in the PR |
 | `get_file_content` | Returns the full content of a file from the PR's source branch |
 | `post_pr_comment` | Posts a general comment thread on the PR |
 | `post_inline_comment` | Posts an inline comment on a specific file and line |
+| `post_suggestion_comment` | Posts an inline code suggestion (renders an "Apply change" button in the PR UI) |
 | `create_commit` | Creates a commit with file changes on the PR's source branch |
 | `create_pr` | Creates a new branch + PR with the given file changes |
 
@@ -126,6 +135,20 @@ You are an expert software engineer performing a thorough code review...
 | `comments` | Agent posts inline/general comments on the PR. Nothing is committed. |
 | `commit` | Agent commits file changes directly to the PR's source branch. |
 | `new_pr` | Agent creates a new branch and opens a separate PR with the changes. |
+
+### `create_pr_target` — choosing the target branch
+
+When `output: new_pr`, the agent calls `create_pr` to open a new PR. By default the new PR targets the same branch as the context PR (e.g. `develop`). Use `create_pr_target` to change this behavior:
+
+| Value | New PR targets | Example |
+|---|---|---|
+| `target_branch` (default) | The context PR's target branch | `feature/1 → develop` → new PR targets `develop` |
+| `source_branch` | The context PR's source branch | `feature/1 → develop` → new PR targets `feature/1` |
+
+```yaml
+# Skill opens a PR back into the feature branch (useful for test generation, doc updates, etc.)
+create_pr_target: source_branch
+```
 
 ---
 
