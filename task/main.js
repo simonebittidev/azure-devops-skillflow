@@ -76,4 +76,13 @@ const run = spawnSync(
   { stdio: 'inherit', env: process.env }
 );
 
-process.exit(run.status || 0);
+if (run.error) {
+  logError(`Failed to start ${python}: ${run.error.message}`);
+  process.exit(1);
+}
+if (run.status === null) {
+  // Killed by a signal (e.g. OOM or timeout): status is null, which is not a success.
+  logError(`main.py was terminated by signal ${run.signal}`);
+  process.exit(1);
+}
+process.exit(run.status);

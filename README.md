@@ -108,6 +108,7 @@ You are an expert software engineer performing a thorough code review...
 | `max_iterations` | no | Max agent steps, default `10`, max `50` |
 | `tools` | no | List of tools to enable (see below) |
 | `create_pr_target` | no | Target branch for the new PR when using `create_pr`: `target_branch` (default) or `source_branch` (see below) |
+| `close_outdated_comments` | no | `true` (default) closes this skill's inline comments whose code changed since they were posted (see [Re-runs and duplicate comments](#re-runs-and-duplicate-comments)) |
 | `azure_endpoint` | azure_openai only | Azure OpenAI endpoint URL |
 | `azure_api_version` | azure_openai only | API version string |
 | `azure_deployment` | azure_openai only | Deployment name |
@@ -117,16 +118,28 @@ You are an expert software engineer performing a thorough code review...
 
 | Tool | Description |
 |---|---|
-| `get_pr_comments` | Returns all existing comment threads on the PR (id, file, line, content, status). Use it before posting to avoid duplicates. |
-| `get_pr_diff` | Fetches the diff summary for the PR (changed files + change types) |
+| `get_pr_comments` | Returns the existing comment threads on the PR (id, status, file, line, comment and replies), flagging the ones posted by the running skill and whether their code has changed since. Use it before reviewing to avoid re-reporting known problems. |
+| `resolve_pr_comment` | Marks one of the skill's own threads as fixed, with a short reason. Use it when a problem reported in a previous run has been fixed. |
+| `get_pr_diff` | Returns the unified diff of all changes in the PR, each line prefixed with its line number in the new file |
 | `get_file_diff` | Returns the unified diff for a single file in the PR |
 | `list_changed_files` | Returns the list of file paths modified in the PR |
-| `get_file_content` | Returns the full content of a file from the PR's source branch |
-| `post_pr_comment` | Posts a general comment thread on the PR |
+| `get_file_content` | Returns the full content of a file in the PR's latest version (optionally with line numbers) |
+| `post_pr_comment` | Posts the skill's general comment on the PR; later calls and later runs update that same comment |
 | `post_inline_comment` | Posts an inline comment on a specific file and line |
 | `post_suggestion_comment` | Posts an inline code suggestion (renders an "Apply change" button in the PR UI) |
 | `create_commit` | Creates a commit with file changes on the PR's source branch |
 | `create_pr` | Creates a new branch + PR with the given file changes |
+
+### Re-runs and duplicate comments
+
+The pipeline runs again on every push to the PR. To keep the PR readable, SkillFlow tags every thread it posts with a hidden marker (the skill name and a fingerprint of the commented code) and uses it on later runs:
+
+- **No repeated findings.** An inline comment within 2 lines of a thread the same skill already posted is skipped when that code hasn't changed, whatever the thread's status, so a thread resolved as *Won't fix* is not reopened by a new comment.
+- **Outdated comments are closed.** Before the agent starts, the skill's active inline threads whose code was modified (or whose file was deleted) since they were posted are closed with a short reply. If the problem is still there, the agent reports it again on the new code. Set `close_outdated_comments: false` to keep them open.
+- **One summary per skill.** `post_pr_comment` updates the skill's existing general comment instead of adding a new one.
+- **Fixed problems can be resolved.** With `get_pr_comments` and `resolve_pr_comment`, the agent can see its previous threads and mark the ones that were fixed.
+
+Each skill only manages its own threads: comments written by people or by other skills are never closed or edited. Threads posted by SkillFlow versions older than 0.2.17 have no marker and are left untouched.
 
 ### Output Types
 
