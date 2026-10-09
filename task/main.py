@@ -136,6 +136,7 @@ def main() -> None:
 
     # --- Run each skill ---
     errors: list[str] = []
+    ran = 0
 
     for skill_file in skill_files:
         print(f"\n##[section]Loading skill: {skill_file.name}")
@@ -157,6 +158,7 @@ def main() -> None:
         print(f"  Tools:    {', '.join(skill.tools)}")
 
         print(f"\n##[section]Running skill: {skill.name}")
+        ran += 1
         try:
             result = run_skill(skill, ctx, verbose=verbose)
             print(result)
@@ -173,7 +175,7 @@ def main() -> None:
         print(f"\n##vso[task.logissue type=error]{len(errors)} skill(s) failed.")
         sys.exit(1)
 
-    print(f"\n##[section]SkillFlow completed — {len(skill_files)} skill(s) ran successfully.")
+    print(f"\n##[section]SkillFlow completed — {ran} skill(s) ran successfully.")
     print("##vso[task.complete result=Succeeded]")
 
 

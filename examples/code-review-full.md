@@ -10,6 +10,7 @@ output: comments
 max_iterations: 15
 tools:
   - get_pr_comments
+  - resolve_pr_comment
   - get_pr_diff
   - list_changed_files
   - get_file_content
@@ -26,16 +27,19 @@ This skill reviews the **full content** of each changed file for maximum context
 
 ## How to Proceed
 
-1. Call `get_pr_comments` to retrieve all existing comment threads on the PR. Before posting any inline comment, check this list: if an active thread already exists on the same file within 5 lines of the target line, skip that comment to avoid duplicates.
+1. Call `get_pr_comments` to retrieve the existing comment threads on the PR (this skill may already have reviewed earlier versions of it):
+   - Do not re-report a problem that an existing thread already covers, whatever its status. `wontFix`, `byDesign` and `closed` mean the problem was dismissed: read the replies and respect that decision.
+   - For each `active` thread with `isFromThisSkill: true`, check the current code: if the problem is fixed, call `resolve_pr_comment` with that thread id.
+   - Threads of this skill whose code was modified since they were posted are closed automatically before the review starts.
 2. Call `get_pr_diff` to get an overview of what changed across the PR.
 3. Call `list_changed_files` to get the complete list of modified files.
-4. For each relevant file, call `get_file_content` to read its full content and understand the context around the changes.
+4. For each relevant file, call `get_file_content` with `line_numbers: true` to read its full content with line numbers and understand the context around the changes.
 5. Post feedback using the appropriate tool:
    - Use `post_suggestion_comment` when you can propose an exact replacement for a line (e.g. a typo fix, a renamed variable, a safer API call). This renders an interactive diff with an "Apply change" button in Azure DevOps.
    - Use `post_inline_comment` for general observations, questions, or feedback that does not map to a single-line replacement.
    - Only comment on lines that appear in the diff.
    - Try always to propose suggestion, if no suggestion could be proposed the post an inline comment.
-6. After reviewing all files, post a summary with `post_pr_comment`.
+6. After reviewing all files, post a summary with `post_pr_comment`. It replaces the summary posted by previous runs, so it must describe the current state of the whole PR, including problems still open from earlier runs.
 
 ## What to Look For
 

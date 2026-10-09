@@ -7,6 +7,8 @@ OutputType = Literal["comments", "commit", "new_pr"]
 CreatePrTargetType = Literal["target_branch", "source_branch"]
 
 AVAILABLE_TOOLS = {
+    "get_pr_comments",
+    "resolve_pr_comment",
     "get_pr_diff",
     "get_file_content",
     "get_file_diff",
@@ -48,6 +50,8 @@ class SkillFrontmatter(BaseModel):
     ollama_base_url: str = "http://localhost:11434"
     # create_pr behavior
     create_pr_target: CreatePrTargetType = "target_branch"
+    # Close this skill's inline comments whose code changed since they were posted
+    close_outdated_comments: bool = True
 
     def validate_tools(self) -> list[str]:
         unknown = set(self.tools) - AVAILABLE_TOOLS

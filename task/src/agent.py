@@ -7,6 +7,7 @@ from typing import TypedDict, Annotated
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.language_models import BaseChatModel
+from langgraph.errors import GraphRecursionError
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -14,7 +15,10 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from .models.skill import Skill, PRContext
 from .providers.provider_factory import create_chat_model
 from .skill_loader import resolve_api_key
-from .tools.azdo_tools import build_tools
+from .tools.azdo_tools import AzDOClient, build_tools
+from .tools.comment_tracking import CommentTracker
+
+INLINE_COMMENT_TOOLS = {"post_inline_comment", "post_suggestion_comment"}
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +35,13 @@ class AgentState(TypedDict):
 # Graph builder
 # ---------------------------------------------------------------------------
 
-def build_agent(skill: Skill, ctx: PRContext) -> "CompiledGraph":
-    """Build and compile a LangGraph ReAct agent for the given skill and PR context.
+def build_agent(skill: Skill, client: AzDOClient, comments: CommentTracker) -> "CompiledGraph":
+    """Build and compile a LangGraph ReAct agent for the given skill and PR.
 
     Args:
         skill: The loaded and validated Skill.
-        ctx: The Pull Request context (credentials + identifiers).
+        client: Azure DevOps client bound to the Pull Request.
+        comments: Tracker of the skill's comment threads on the Pull Request.
 
     Returns:
         A compiled LangGraph graph ready to be invoked.
@@ -44,7 +49,7 @@ def build_agent(skill: Skill, ctx: PRContext) -> "CompiledGraph":
     api_key = resolve_api_key(skill)
     llm: BaseChatModel = create_chat_model(skill, api_key)
 
-    tools = build_tools(ctx, skill.tools, skill.create_pr_target)
+    tools = build_tools(client, comments, skill.tools, skill.create_pr_target)
     llm_with_tools = llm.bind_tools(tools)
 
     def call_model(state: AgentState) -> AgentState:
@@ -93,16 +98,34 @@ def run_skill(skill: Skill, ctx: PRContext, verbose: bool = False) -> str:
         skill.model,
     )
 
-    agent = build_agent(skill, ctx)
+    client = AzDOClient(ctx)
+    comments = CommentTracker(client, skill.name)
+    posts_inline = bool(INLINE_COMMENT_TOOLS & set(skill.tools))
+    agent = build_agent(skill, client, comments)
+
+    if posts_inline and skill.frontmatter.close_outdated_comments:
+        try:
+            closed = comments.close_outdated()
+            if closed:
+                print(f"  Closed {len(closed)} outdated comment thread(s) from previous runs: "
+                      + ", ".join(f"#{t}" for t in closed))
+        except Exception as exc:
+            print(f"##vso[task.logissue type=warning]Skill '{skill.name}': could not close outdated comments: {exc}")
+
+    task = (
+        f"Please analyze Pull Request #{ctx.pull_request_id} "
+        f"in project '{ctx.project}' and perform the task described above."
+    )
+    if posts_inline or "post_pr_comment" in skill.tools:
+        task += (
+            "\n\nThis skill may already have run on earlier versions of this PR. "
+            "Inline comments that repeat one of your previous comments on unchanged code are "
+            "skipped automatically, and calling post_pr_comment replaces your previous general comment."
+        )
 
     initial_messages: list[BaseMessage] = [
         SystemMessage(content=skill.system_prompt),
-        HumanMessage(
-            content=(
-                f"Please analyze Pull Request #{ctx.pull_request_id} "
-                f"in project '{ctx.project}' and perform the task described above."
-            )
-        ),
+        HumanMessage(content=task),
     ]
 
     config = {
@@ -118,7 +141,15 @@ def run_skill(skill: Skill, ctx: PRContext, verbose: bool = False) -> str:
         },
     }
 
-    final_state = agent.invoke({"messages": initial_messages}, config=config)
+    try:
+        final_state = agent.invoke({"messages": initial_messages}, config=config)
+    except GraphRecursionError:
+        print(
+            f"##vso[task.logissue type=warning]Skill '{skill.name}' stopped after max_iterations "
+            f"({skill.max_iterations}) before finishing; its output may be incomplete. "
+            "Increase max_iterations in the skill frontmatter."
+        )
+        return "Skill stopped: max_iterations reached."
 
     messages = final_state.get("messages", [])
 
